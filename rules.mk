@@ -38,7 +38,7 @@ ARCH_FLAGS	:= -mthumb -mcpu=cortex-m0plus
 DEBUG_FLAGS ?= -gdwarf-3
 
 # c flags
-OPT			?= -O3
+OPT			?= -O1
 CSTD		?= -std=c99
 TGT_CFLAGS 	+= $(ARCH_FLAGS) $(DEBUG_FLAGS) $(OPT) $(CSTD) $(addprefix -D, $(LIB_FLAGS)) -Wall -ffunction-sections -fdata-sections
 
@@ -49,13 +49,8 @@ TGT_ASFLAGS += $(ARCH_FLAGS) $(DEBUG_FLAGS) $(OPT) -Wa,--warn
 TGT_LDFLAGS += $(ARCH_FLAGS) -specs=nano.specs -specs=nosys.specs -static -lc -lm \
 				-Wl,-Map=$(BDIR)/$(PROJECT).map \
 				-Wl,--gc-sections \
-				-Wl,--print-memory-usage
-
-GCC_VERSION := $(shell $(CC) -dumpversion)
-IS_GCC_ABOVE_12 := $(shell expr "$(GCC_VERSION)" ">=" "12")
-ifeq "$(IS_GCC_ABOVE_12)" "1"
-    TGT_LDFLAGS += -Wl,--no-warn-rwx-segments
-endif
+				-Wl,--print-memory-usage \
+				-Wl,--no-warn-rwx-segments
 
 ifeq ($(ENABLE_PRINTF_FLOAT),y)
 TGT_LDFLAGS	+= -u _printf_float
@@ -114,8 +109,8 @@ flash:
 ifeq ($(FLASH_PROGRM),jlink)
 	$(JLINKEXE) -device $(JLINK_DEVICE) -if swd -speed 4000 -JLinkScriptFile $(TOP)/Misc/jlink-script -CommanderScript $(TOP)/Misc/jlink-command
 else ifeq ($(FLASH_PROGRM),pyocd)
-	$(PYOCD_EXE) erase -t $(PYOCD_DEVICE) --chip --config $(TOP)/Misc/pyocd.yaml
-	$(PYOCD_EXE) load $(BDIR)/$(PROJECT).hex -t $(PYOCD_DEVICE) --config $(TOP)/Misc/pyocd.yaml
+	sudo $(PYOCD_EXE) erase -t $(PYOCD_DEVICE) --chip --config $(TOP)/Misc/pyocd.yaml
+	sudo $(PYOCD_EXE) load $(BDIR)/$(PROJECT).hex -t $(PYOCD_DEVICE) --config $(TOP)/Misc/pyocd.yaml
 else
 	@echo "FLASH_PROGRM is invalid\n"
 endif
